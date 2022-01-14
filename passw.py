@@ -2,9 +2,18 @@ import os
 import pickle
 import sys
 import json
+import random
+from string import ascii_letters, punctuation, digits
+
 
 def clear(): 
-    os.system('clear')
+      # for windows
+    if os.name == 'nt':
+        _ = os.system('cls')
+  
+    # for mac and linux(here, os.name is 'posix')
+    else:
+        _ = os.system('clear')
 
 def mainScreen():
     clear()
@@ -40,7 +49,17 @@ def writeFile(file):
     passwFile = open(file, 'a')
     name=str(input('Add a name: '))
     email = str(input('Add an email: '))
-    passw = str(input('Add a new Password: '))
+    #Choice for Generated password vs user input 
+    choice =str(input('1->Generated password\n2->Write your own password\n\n'))
+    if choice == '1':
+        passw_length = int(input('Password length: '))
+        string_format = ascii_letters + punctuation + digits
+        passw = "".join(random.choice(string_format) for x in range(passw_length))
+        print(passw)
+        j = str(input())
+    elif choice == '2':
+        passw = str(input('Add a new Password: '))
+
     passwDic = {'password':passw,'name':name,'email':email}
     #entry = pickle.dumps(passwDic)
     #passwFile.write(entry + b'\n')
