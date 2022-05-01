@@ -1,12 +1,12 @@
 import os
-import pickle
 import sys
 import json
 import random
 from string import ascii_letters, punctuation, digits
 import base64
 import hashlib
-
+from termcolor import colored, cprint
+from cryptography.fernet import Fernet
 
 def clear(): 
       # for windows
@@ -19,8 +19,12 @@ def clear():
 
 def mainScreen():
     clear()
-    print('Password-Manager\nUser-> ' + user_name + '\n')
-    print('1-> New Password\n2-> See all passwords\n3-> Clear all Passwords\n\n0-> Log Out\n')
+    print(colored('Password-Manager', 'green', attrs=['bold']))
+    print(colored('User-> ', 'yellow') + colored(user_name + '\n', 'white'))
+    #print(colored(user_name, 'white'))
+    print(colored('1-> New Password\n2-> See all passwords\n3-> Clear all Passwords', 'magenta'))
+    print(colored('\n9-> Delete All Data', 'red', attrs=['bold']))
+    print(colored('0-> Log Out\n', 'red'))
 
 def lineCounter(filename):
     counter = 0
@@ -52,6 +56,17 @@ def passGen(passw_length):
     return passw
 
 def writeFile(file):
+    
+    def encPassword():
+        key = Fernet.generate_key()
+        fernet = Fernet(key + passwordBytes) #key
+        encPassw = fernet.encrypt(passw.encode())
+        passwDic = {'password':encPassw.decode(),'name':name,'email':email,'key':key.decode()}
+        entry = json.dumps(passwDic)
+        passwFile.write(entry + '\n')
+        passwFile.close()
+        passwProgram()  
+
     clear()
     passwFile = open(file, 'a')
     name=str(input('Add a name: '))
@@ -72,22 +87,17 @@ def writeFile(file):
         j = int(input("\nIs this password OK ?\n\n1-> Yes\n2-> No\n\n"))
         if j == 1:
             #Write the password to the file:
-            passwDic = {'password':passw,'name':name,'email':email}
-            entry = json.dumps(passwDic)
-            passwFile.write(entry + '\n')
-            passwFile.close()
-            passwProgram()
+
+            encPassword()
+
         elif j == 2:
             clear()
             passwProgram()  
     elif choice == '2':
         passw = str(input('Add a new Password: '))
-        passwDic = {'password':passw,'name':name,'email':email}
-        entry = json.dumps(passwDic)
-        passwFile.write(entry + '\n')
-        passwFile.close()
-        passwProgram()
-    
+
+        encPassword()
+
     return 0
 
 def remove_line(file,lineToSkip):
@@ -111,7 +121,16 @@ def readFile(file):
         data = passwFile.readlines()
         d = json.loads(data[i])
         string_i = str(i + 1)
-        print(string_i + ' -> ' + d['name'] + '\nEmail: ' + d['email'] + '\nPassword: ' + d['password'] + '\n')
+
+        print(colored(string_i + ' -> ', 'yellow') + colored(d['name'], 'green') + colored('\nEmail: ', 'blue') + colored(d['email'], 'cyan'))
+        
+        stringKey = d['key']
+        bytesKey = stringKey.encode()
+        fernet = Fernet(bytesKey + passwordBytes)
+        encPassword = d['password'].encode()
+
+        password = fernet.decrypt(encPassword).decode()
+        print(colored('Password: ', 'red')  + colored(password, 'magenta') + '\n')
         passwFile.close()
     
     k = input("1 -> DELETE specific password\n0 -> Press Enter for Main Screen\n\n")
@@ -143,18 +162,29 @@ def clearFile(file):
 
 def userId():
     clear()
-    print('Password-Manager\nAuthentication')
-    i = input('1-> Log in\n2-> Sign Up\n\n0-> Close\n\n')
+    print(colored('Password-Manager', 'green', attrs=['bold']))
+    print(colored("Authentication\n", 'blue'))
+    print(colored("1-> Log in\n2-> Sign up\n", 'cyan'))
+    print(colored('0-> Exit', 'red'))
+    i = input()
     if i == '1':
         clear()
         username = str(input('Username: '))
         plain_password = str(input('Password: '))
+
+        global userIdNumber
+        userIdNumber =  0
+
+        global passwordBytes
+        passwordBytes = plain_password.encode()
 
         encoded_password = base64.b64encode(plain_password.encode('utf-8'))
 
         for x in range(lineCounterBytes('usrID.json') - 1):
             salt_usr = authantication(x)['salt'].encode('iso-8859-1')
             password = hashlib.sha256(encoded_password + salt_usr).hexdigest()
+
+            userIdNumber += 1
 
             if (authantication(x)['username'] == username and authantication(x)['password'] == password):
                 print('Succesfull Authentication')
@@ -210,9 +240,23 @@ def userId():
         
     elif i == '0':
         clear()
-        sys.exit("Password-Mananger Closed")
+        sys.exit(colored("Password-Mananger Closed", "red"))
     else:
         userId()
+
+def deleteUser(file):
+    clear()
+    print(colored('DELETE this account.', 'red', attrs=['bold']))
+    print(colored('All data will be lost.', 'red', attrs=['bold']))
+    print(colored('Type your master "Confrim" to continue: ', 'cyan'))
+    print(colored('\n0-> Cancel\n', 'green', attrs=['bold']))
+
+    i = input()
+    if i == 'Confirm':
+        remove_line('usrID.json', userIdNumber)
+        os.remove(file)
+    elif i == '0':
+        pass
 
 def passwProgram():
     mainScreen()
@@ -227,6 +271,8 @@ def passwProgram():
     elif x == '0':
         clear()
         return 1
+    elif x == '9':
+        deleteUser(user)
     else: 
         mainScreen()
 
