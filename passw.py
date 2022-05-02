@@ -9,7 +9,7 @@ from termcolor import colored, cprint
 from cryptography.fernet import Fernet
 
 def clear(): 
-      # for windows
+    # for windows
     if os.name == 'nt':
         _ = os.system('cls')
   
@@ -26,37 +26,42 @@ def mainScreen():
     print(colored('\n9-> Delete All Data', 'red', attrs=['bold']))
     print(colored('0-> Log Out\n', 'red'))
 
+
+#Counts the number of lines in a file
 def lineCounter(filename):
     counter = 0
-    passwFileRead = open(filename, 'rt')
-    #print(passwFileRead.read())
-    for i in (passwFileRead.read()).split('\n'):
-        if i:
-            counter +=1
-    return counter + 1
+    #passwFileRead = open(filename, 'rt')
+    with open(filename,'rt') as passwFileRead:
+        for i in (passwFileRead.read()).split('\n'):
+            if i:
+                counter +=1
+        return counter + 1
 
 def lineCounterBytes(filename):
     counter = 0
-    passwFileRead = open(filename, 'rb')
-    #print(passwFileRead.read())
-    for i in (passwFileRead.read()).split(b'\n'):
-        if i:
-            counter +=1
-    return counter + 1
+    #passwFileRead = open(filename, 'rb')
+    with open(filename, 'rb') as passwFileRead:
+        for i in (passwFileRead.read()).split(b'\n'):
+            if i:
+                counter +=1
+        return counter + 1
 
 def authantication(nr):
-    usrFile = open('usrID.json', 'r')
-    data = usrFile.readlines()
-    d = json.loads(data[nr])
-    return d
+    #usrFile = open('usrID.json', 'r')
+    with open('usrID.json', 'r') as usrFile:
+        data = usrFile.readlines()
+        d = json.loads(data[nr])
+        return d
 
+#Generates a random password
 def passGen(passw_length):
     string_format = ascii_letters + punctuation + digits
     passw = "".join(random.choice(string_format) for x in range(passw_length))
     return passw
 
 def writeFile(file):
-    
+
+    #Encrypts the password 
     def encPassword():
         key = Fernet.generate_key()
         fernet = Fernet(key + passwordBytes) #key
@@ -66,8 +71,8 @@ def writeFile(file):
         passwFile.write(entry + '\n')
         passwFile.close()
         passwProgram()  
-
     clear()
+
     passwFile = open(file, 'a')
     name=str(input('Add a name: '))
     email = str(input('Add an email: '))
@@ -82,24 +87,20 @@ def writeFile(file):
         else: 
             passw_length = int(passw_length_str)
             passw = passGen(passw_length)
-
         print(passw)
         j = int(input("\nIs this password OK ?\n\n1-> Yes\n2-> No\n\n"))
         if j == 1:
-            #Write the password to the file:
-
+            #Writes the password to the file:
             encPassword()
-
         elif j == 2:
             clear()
             passwProgram()  
     elif choice == '2':
         passw = str(input('Add a new Password: '))
-
         encPassword()
-
     return 0
 
+#Removes a line from any given file 
 def remove_line(file,lineToSkip):
     with open(file,'r') as read_file:
         data = read_file.readlines()
@@ -114,38 +115,36 @@ def remove_line(file,lineToSkip):
             curentLine += 1
     return 0
 
+#Reads the user data file and shows the passwords on the screen
 def readFile(file):
     clear()
     for i in range(lineCounter(file) - 1):
-        passwFile = open(file, 'r')
-        data = passwFile.readlines()
-        d = json.loads(data[i])
-        string_i = str(i + 1)
+        #passwFile = open(file, 'r')
+        with open(file, 'r') as passwFile:
+            data = passwFile.readlines()
+            d = json.loads(data[i])
+            string_i = str(i + 1)
 
-        print(colored(string_i + ' -> ', 'yellow') + colored(d['name'], 'green') + colored('\nEmail: ', 'blue') + colored(d['email'], 'cyan'))
-        
-        stringKey = d['key']
-        bytesKey = stringKey.encode()
-        fernet = Fernet(bytesKey + passwordBytes)
-        encPassword = d['password'].encode()
+            print(colored(string_i + ' -> ', 'yellow') + colored(d['name'], 'green') + colored('\nEmail: ', 'blue') + colored(d['email'], 'cyan'))
 
-        password = fernet.decrypt(encPassword).decode()
-        print(colored('Password: ', 'red')  + colored(password, 'magenta') + '\n')
-        passwFile.close()
-    
+            stringKey = d['key']
+            bytesKey = stringKey.encode()
+            fernet = Fernet(bytesKey + passwordBytes)
+            encPassword = d['password'].encode()
+
+            password = fernet.decrypt(encPassword).decode()
+            print(colored('Password: ', 'red')  + colored(password, 'magenta') + '\n')
     k = input("1 -> DELETE specific password\n0 -> Press Enter for Main Screen\n\n")
-
     if k == '1':
         line_nr = int(input('Write the number of the password: '))
-
         remove_line(file,line_nr)
-
         d = str(input(""))
         passwProgram()
     elif k == '0':
         passwProgram()    
     return 0
 
+#Deltes all the data from the user's data file, removing all of his passwords
 def clearFile(file):
     clear()
     c = str(input("Are you sure you want to DELETE all Passwords\n Write YES or NO\n"))
