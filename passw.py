@@ -30,7 +30,6 @@ def mainScreen():
 #Counts the number of lines in a file
 def lineCounter(filename):
     counter = 0
-    #passwFileRead = open(filename, 'rt')
     with open(filename,'rt') as passwFileRead:
         for i in (passwFileRead.read()).split('\n'):
             if i:
@@ -39,7 +38,6 @@ def lineCounter(filename):
 
 def lineCounterBytes(filename):
     counter = 0
-    #passwFileRead = open(filename, 'rb')
     with open(filename, 'rb') as passwFileRead:
         for i in (passwFileRead.read()).split(b'\n'):
             if i:
@@ -47,7 +45,6 @@ def lineCounterBytes(filename):
         return counter + 1
 
 def authantication(nr):
-    #usrFile = open('usrID.json', 'r')
     with open('usrID.json', 'r') as usrFile:
         data = usrFile.readlines()
         d = json.loads(data[nr])
@@ -119,7 +116,6 @@ def remove_line(file,lineToSkip):
 def readFile(file):
     clear()
     for i in range(lineCounter(file) - 1):
-        #passwFile = open(file, 'r')
         with open(file, 'r') as passwFile:
             data = passwFile.readlines()
             d = json.loads(data[i])
@@ -149,7 +145,6 @@ def clearFile(file):
     clear()
     c = str(input("Are you sure you want to DELETE all Passwords\n Write YES or NO\n"))
     if c == 'YES':
-        passwFile = open(file, 'wt')
         clear()
         print("All your passwords have been deleted.\n")
         k = input('Press Enter for Main Scren\n')
@@ -230,8 +225,6 @@ def userId():
 
         elif (usrMatch == 1):
             clear()
-            #sys.exit('User already exists\nPress Enter for Authentication')
-            #print('User already exists\nPress Enter for Authentication')
             q = input('Username already exists\nPress Enter')
             if q == '':
                 #userId()
