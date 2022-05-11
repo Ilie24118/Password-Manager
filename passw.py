@@ -268,9 +268,9 @@ def passwProgram():
     else: 
         mainScreen()
 
-
-state = True
-while (state):
-    if (userId() == 2):
-        passwProgram()
+if __name__=="__main__":
+    state = True
+    while (state):
+        if (userId() == 2):
+            passwProgram()
 
